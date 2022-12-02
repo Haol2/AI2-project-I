@@ -97,11 +97,29 @@ def constructBayesNet(gameState):
     variableDomainsDict = {}
 
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    for housePos in gameState.getPossibleHouses():
+            for obsPos in gameState.getHouseWalls(housePos):
+                obsVar = OBS_VAR_TEMPLATE % obsPos
+                obsVars.append(obsVar)
+
+    edges.extend((x, y) for x in [X_POS_VAR, Y_POS_VAR] for y in [FOOD_HOUSE_VAR, GHOST_HOUSE_VAR])
+    edges.extend((x, y) for x in [FOOD_HOUSE_VAR, GHOST_HOUSE_VAR] for y in obsVars)
+
+    variableDomainsDict[X_POS_VAR] = [X_POS_VALS]
+    variableDomainsDict[Y_POS_VAR] = [Y_POS_VALS]
+    variableDomainsDict[FOOD_HOUSE_VAR] = [HOUSE_VALS]
+    variableDomainsDict[GHOST_HOUSE_VAR] = [HOUSE_VALS]
+
+    for obsVar in obsVars:
+        variableDomainsDict[obsVar] = [OBS_VALS]
+
+    #util.raiseNotDefined()
     "*** END YOUR CODE HERE ***"
 
     variables = [X_POS_VAR, Y_POS_VAR] + HOUSE_VARS + obsVars
     net = bn.constructEmptyBayesNet(variables, edges, variableDomainsDict)
+ 
     return net, obsVars
 
 def fillCPTs(bayesNet, gameState):
