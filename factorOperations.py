@@ -102,7 +102,41 @@ def joinFactors(factors):
 
 
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    
+    # explanation:  P(  UNCONDITIONED  |  CONDITIONED  )
+    # For a general join operation, each variable that is unconditioned in one factor, is unconditioned in the result.
+    #                "            , each variable that is conditioned in one factor, but not unconditioned in any factor, is conditioned in the result.
+
+    #util.raiseNotDefined()
+
+    factors = list(factors)
+
+    if len(factors) == 1:
+        return factors[0]
+
+    factor1: Factor = factors[0]
+    factor2: Factor = joinFactors(factors[1:])
+
+    unconditionedVariables = []
+    conditionedVariables = []
+    variableDomainsDict = factor1.variableDomainsDict()
+
+    unconditionedVariables.extend(factor1.unconditionedVariables())
+    unconditionedVariables.extend(factor2.unconditionedVariables())
+
+    for setOfC in [factor1.conditionedVariables(), factor2.conditionedVariables()]:
+        for v in setOfC:
+            if v not in unconditionedVariables:
+                conditionedVariables.append(v)
+
+    newFactor = Factor(set(unconditionedVariables), set(conditionedVariables), variableDomainsDict)
+
+    for assignment in newFactor.getAllPossibleAssignmentDicts():
+        newProb = factor1.getProbability(assignment) * factor2.getProbability(assignment)
+        newFactor.setProbability(assignment, newProb)
+
+    return newFactor
+    
     "*** END YOUR CODE HERE ***"
 
 
