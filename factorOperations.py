@@ -265,6 +265,44 @@ def normalize(factor):
                             str(factor))
 
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    # explanation:  P(  UNCONDITIONED  |  CONDITIONED  )
+    # For a general normalize operation, result contains the unconditioned variables of the factor which have more than one entry in their domain as unconditioned variables.
+    #                "                 , result contains the conditioned variables as well as any unconditioned variable with only one entry in their domain of the factor as conditioned variables.
+    #util.raiseNotDefined()
+
+    conditionedVariables = []
+    unconditionedVariables = []
+    variableDomainsDict = factor.variableDomainsDict()
+
+    allPossibleAssignmentDicts = factor.getAllPossibleAssignmentDicts()
+
+    for unc in factor.unconditionedVariables():
+        usedDomain = []
+        for a in allPossibleAssignmentDicts:
+            usedDomain.append(a[unc])
+
+        if (len(set(usedDomain)) == 1):
+            conditionedVariables.append(unc)
+        else:
+            unconditionedVariables.append(unc)
+
+    conditionedVariables.extend(list(factor.conditionedVariables()))
+
+    probSum = 0
+    for a in allPossibleAssignmentDicts:
+        probSum += factor.getProbability(a)
+
+    if probSum == 0:
+        return None
+
+    newFactor = Factor(set(unconditionedVariables), set(conditionedVariables), variableDomainsDict)
+
+    for a in factor.getAllPossibleAssignmentDicts():
+        oldProb = factor.getProbability(a)
+        newFactor.setProbability(a, oldProb/probSum)
+
+    return newFactor
+
     "*** END YOUR CODE HERE ***"
 
