@@ -97,11 +97,29 @@ def constructBayesNet(gameState):
     variableDomainsDict = {}
 
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    for housePos in gameState.getPossibleHouses():
+            for obsPos in gameState.getHouseWalls(housePos):
+                obsVar = OBS_VAR_TEMPLATE % obsPos
+                obsVars.append(obsVar)
+
+    edges.extend((x, y) for x in [X_POS_VAR, Y_POS_VAR] for y in [FOOD_HOUSE_VAR, GHOST_HOUSE_VAR])
+    edges.extend((x, y) for x in [FOOD_HOUSE_VAR, GHOST_HOUSE_VAR] for y in obsVars)
+
+    variableDomainsDict[X_POS_VAR] = X_POS_VALS
+    variableDomainsDict[Y_POS_VAR] = Y_POS_VALS
+    variableDomainsDict[FOOD_HOUSE_VAR] = HOUSE_VALS
+    variableDomainsDict[GHOST_HOUSE_VAR] = HOUSE_VALS
+
+    for obsVar in obsVars:
+        variableDomainsDict[obsVar] = OBS_VALS
+
+    #util.raiseNotDefined()
     "*** END YOUR CODE HERE ***"
 
     variables = [X_POS_VAR, Y_POS_VAR] + HOUSE_VARS + obsVars
     net = bn.constructEmptyBayesNet(variables, edges, variableDomainsDict)
+ 
     return net, obsVars
 
 def fillCPTs(bayesNet, gameState):
@@ -129,7 +147,12 @@ def fillYCPT(bayesNet, gameState):
 
     yFactor = bn.Factor([Y_POS_VAR], [], bayesNet.variableDomainsDict())
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    yFactor.setProbability({Y_POS_VAR: BOTH_TOP_VAL}, PROB_BOTH_TOP)
+    yFactor.setProbability({Y_POS_VAR: BOTH_BOTTOM_VAL}, PROB_BOTH_BOTTOM)
+    yFactor.setProbability({Y_POS_VAR: LEFT_TOP_VAL}, PROB_ONLY_LEFT_TOP)
+    yFactor.setProbability({Y_POS_VAR: LEFT_BOTTOM_VAL}, PROB_ONLY_LEFT_BOTTOM)
+
+    #util.raiseNotDefined()
     "*** END YOUR CODE HERE ***"
     bayesNet.setCPT(Y_POS_VAR, yFactor)
 
@@ -261,7 +284,18 @@ def getMostLikelyFoodHousePosition(evidence, bayesNet, eliminationOrder):
     (This should be a very short method.)
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    #util.raiseNotDefined()
+
+    foodHouseFactor = inference.inferenceByVariableElimination(bayesNet, FOOD_HOUSE_VAR, evidence, eliminationOrder)
+
+    probsDict = {}
+    for a in foodHouseFactor.getAllPossibleAssignmentDicts():
+        probsDict[a[FOOD_HOUSE_VAR]] = foodHouseFactor.getProbability(a)
+
+    best_house_val = max(probsDict, key=lambda k: probsDict.get(k))
+    return {FOOD_HOUSE_VAR: best_house_val}
+
     "*** END YOUR CODE HERE ***"
 
 
@@ -364,7 +398,17 @@ class VPIAgent(BayesAgent):
         rightExpectedValue = 0
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        #util.raiseNotDefined()
+        
+        queryResult = inference.inferenceByVariableElimination(self.bayesNet, set([FOOD_HOUSE_VAR, GHOST_HOUSE_VAR]), evidence, eliminationOrder)
+
+        pFoodHouseTopLeft = queryResult.getProbability(dict([(FOOD_HOUSE_VAR, TOP_LEFT_VAL), (GHOST_HOUSE_VAR, TOP_RIGHT_VAL)] + list(evidence.items())))
+        pFoodHouseTopRight = queryResult.getProbability(dict([(FOOD_HOUSE_VAR, TOP_RIGHT_VAL), (GHOST_HOUSE_VAR, TOP_LEFT_VAL)] + list(evidence.items())))
+
+        leftExpectedValue = pFoodHouseTopLeft * WON_GAME_REWARD + (1 - pFoodHouseTopLeft) * GHOST_COLLISION_REWARD
+        rightExpectedValue = pFoodHouseTopRight * WON_GAME_REWARD + (1 - pFoodHouseTopRight) * GHOST_COLLISION_REWARD
+
         "*** END YOUR CODE HERE ***"
 
         return leftExpectedValue, rightExpectedValue
@@ -431,7 +475,13 @@ class VPIAgent(BayesAgent):
         expectedValue = 0
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        #util.raiseNotDefined()
+        
+        futureObservations = self.getExplorationProbsAndOutcomes(evidence)
+        for (prob, explorationEvidence) in futureObservations:
+            expectedValue += prob * max(self.computeEnterValues(explorationEvidence, enterEliminationOrder))
+        
         "*** END YOUR CODE HERE ***"
 
         return expectedValue
